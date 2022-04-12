@@ -1,4 +1,5 @@
 #include <Servo.h>
+#include <Arduino.h>
 
 // constant variables used to set servo angles, in degrees
 const int straight = 90; 
@@ -12,8 +13,9 @@ const int buttonpin2 = 4;
 const int servopin = 9;
 
 // servo movement step delay, in milliseconds
-const int step_delay = 100;
-
+const long step_delay = 100;
+unsigned long b1_previousMillis = 0;
+unsigned long b2_previousMillis = 0;
 // create a servo object
 Servo myservo;  
  
@@ -39,14 +41,16 @@ void setup()
 
 void loop() 
 { 
- // start each iteration of the loop by reading the button
- // if the button is pressed (reads HIGH), move the servo
+ // Espero que algun boton sea presionado
+ // y si lo es, pongo una variable en HIGH
   int button_state1 = digitalRead(buttonpin1);
   int button_state2 = digitalRead(buttonpin2);
-   
+  unsigned long currentMillis = millis(); 
+
   if(button_state1 == HIGH){
+    
     // turn off the lit led
-     Serial.println("El boton straigth fue activado");
+    Serial.println("El boton straigth fue activado");
     if(pos == straight){
               digitalWrite(straight_led, LOW);
           } else {
@@ -54,15 +58,20 @@ void loop()
           }
        // Move the servo to its new position
     Serial.println(pos);
-    if(pos ==  straight){   // if the new angle is higher
-      pos = divergent;
-      // increment the servo position from oldpos to pos
-      for(int i = straight + 1 ; i <= divergent; i++){  
-        myservo.write(i); // write the next position to the servo
-        delay(step_delay); // wait
-        }
+
+    if (currentMillis - b1_previousMillis <= step_delay) {
+      b1_previousMillis = currentMillis;
+      if(pos ==  straight){   // if the new angle is higher
+        
+        // increment the servo position from oldpos to pos
+        for(int i = straight + 1 ; i <= divergent; i++){  
+          myservo.write(i); // write the next position to the servo
+          }
+ 
+    
       } 
-      
+    else {pos = divergent;}
+    }
       // turn on the appropriate LED.
     if(pos == straight){
             digitalWrite(straight_led, HIGH);
@@ -81,15 +90,19 @@ void loop()
           }
        // Move the servo to its new position
     Serial.println(pos);
-    if(pos ==  divergent){   // if the new angle is higher
-      pos = straight;
+    
+    if (currentMillis - b2_previousMillis <= step_delay) {
+      b2_previousMillis = currentMillis;
+      if(pos ==  divergent){   // if the new angle is higher
+        pos = straight;
       // increment the servo position from oldpos to pos
-      for(int b = divergent - 1 ; b >= straight; b--){  
-        myservo.write(b); // write the next position to the servo
-        delay(step_delay); // wait
-        }
-    } 
-   
+        for(int b = divergent - 1 ; b >= straight; b--){  
+          myservo.write(b); // write the next position to the servo
+          delay(step_delay); // wait
+       }
+      }  
+    else {pos = divergent;}
+    }
     // turn on the appropriate LED.
     if(pos == straight){
             digitalWrite(straight_led, HIGH);
